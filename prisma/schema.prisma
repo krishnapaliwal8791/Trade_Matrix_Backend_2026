@@ -1,0 +1,154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  PRIMARY_ORGANIZER
+  SECONDARY_ORGANIZER
+  PARTICIPANT
+}
+
+enum EventStatus {
+  WAITING
+  IPO_RUNNING
+  IPO_PAUSED
+  IPO_COMPLETED
+}
+
+enum PackageStatus {
+  NOT_REVEALED
+  ACTIVE
+  SOLD
+  UNSOLD
+}
+
+model Event {
+  id              String      @id @default(cuid())
+  name            String
+  status          EventStatus @default(WAITING)
+  activePackageId String?     @unique
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  activePackage Package? @relation("ActivePackage", fields: [activePackageId], references: [id])
+
+  @@map("events")
+}
+
+model Team {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  remainingCash Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  users         User[]
+  ownedPackages Package[]
+  transactions  Transaction[]
+
+  @@map("teams")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  name      String
+  email     String   @unique
+  role      UserRole
+  teamId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  team                  Team?          @relation(fields: [teamId], references: [id])
+  announcements         Announcement[] @relation("UserAnnouncements")
+  organizedTransactions Transaction[]  @relation("OrganizerTransactions")
+
+  @@map("users")
+}
+
+model Company {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  sector       String
+  description  String
+  logo         String?
+  initialPrice Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  packageCompanies PackageCompany[]
+
+  @@map("companies")
+}
+
+model Package {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  description String?
+  basePrice   Int
+  status      PackageStatus @default(NOT_REVEALED)
+  winningBid  Int?
+  ownerTeamId String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  ownerTeam        Team?            @relation(fields: [ownerTeamId], references: [id])
+  packageCompanies PackageCompany[]
+  transaction      Transaction?
+  activeInEvents   Event[]          @relation("ActivePackage")
+
+  @@index([ownerTeamId])
+  @@index([status])
+  @@map("packages")
+}
+
+model PackageCompany {
+  packageId String
+  companyId String
+  shares    Int
+
+  package Package @relation(fields: [packageId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@id([packageId, companyId])
+  @@map("package_companies")
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  teamId      String
+  packageId   String   @unique
+  organizerId String
+  winningBid  Int
+  createdAt   DateTime @default(now())
+
+  team      Team    @relation(fields: [teamId], references: [id])
+  package   Package @relation(fields: [packageId], references: [id])
+  organizer User    @relation("OrganizerTransactions", fields: [organizerId], references: [id])
+
+  @@index([teamId])
+  @@map("transactions")
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  message   String
+  authorId  String
+  createdAt DateTime @default(now())
+
+  author User @relation("UserAnnouncements", fields: [authorId], references: [id])
+
+  @@index([createdAt])
+  @@map("announcements")
+}
