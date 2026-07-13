@@ -24,7 +24,7 @@
     "@types/ws": "^8.18.1",
     "prisma": "^6.19.3",
     "tsx": "^4.23.0",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.2"
   },
   "dependencies": {
     "@clerk/express": "^2.1.40",
