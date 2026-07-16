@@ -5,6 +5,8 @@ import { eventRouter } from "../modules/event/event.routes";
 import { packageRouter } from "../modules/package/package.routes";
 import { transactionRouter } from "../modules/transaction/transaction.routes";
 import { announcementRouter } from "../modules/announcement/announcement.routes";
+import { dashboardRouter } from "../modules/dashboard/dashboard.routes";
+import { teamRouter } from "../modules/team/team.routes";
 
 export const router = Router();
 
@@ -14,3 +16,5 @@ router.use("/event", eventRouter);
 router.use("/packages", packageRouter);
 router.use("/transactions", transactionRouter);
 router.use("/announcements", announcementRouter);
+router.use("/dashboard", dashboardRouter);
+router.use("/teams", teamRouter);
