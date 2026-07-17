@@ -7,6 +7,7 @@ import { transactionRouter } from "../modules/transaction/transaction.routes";
 import { announcementRouter } from "../modules/announcement/announcement.routes";
 import { dashboardRouter } from "../modules/dashboard/dashboard.routes";
 import { teamRouter } from "../modules/team/team.routes";
+import { participantRouter } from "../modules/participant/participant.routes";
 
 export const router = Router();
 
@@ -18,3 +19,4 @@ router.use("/transactions", transactionRouter);
 router.use("/announcements", announcementRouter);
 router.use("/dashboard", dashboardRouter);
 router.use("/teams", teamRouter);
+router.use("/participant", participantRouter);
