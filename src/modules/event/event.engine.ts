@@ -75,6 +75,13 @@ export const eventEngine = {
       );
     }
 
+    if (event.activePackageId !== null) {
+      throw new AppError(
+        409,
+        "Cannot complete the event while there is an active package. Please resolve the active package first."
+      );
+    }
+
     const updatedEvent = await eventRepository.updateStatus(event.id, EventStatus.IPO_COMPLETED);
     dispatcher.eventEnded();
     return updatedEvent;
