@@ -97,7 +97,7 @@ export const participantRepository = {
       prisma.package.count({
         where: {
           status: {
-            not: PackageStatus.NOT_REVEALED,
+            in: [PackageStatus.SOLD, PackageStatus.UNSOLD],
           },
         },
       }),
@@ -133,7 +133,7 @@ export const participantRepository = {
       prisma.package.count({
         where: {
           status: {
-            not: PackageStatus.NOT_REVEALED,
+            in: [PackageStatus.SOLD, PackageStatus.UNSOLD],
           },
         },
       }),
