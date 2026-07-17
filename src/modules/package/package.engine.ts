@@ -52,19 +52,6 @@ export const packageEngine = {
       throw new AppError(404, "Package not found.");
     }
 
-    if (pkg.status !== PackageStatus.NOT_REVEALED) {
-      throw new AppError(
-        409,
-        "Package cannot be activated from its current status."
-      );
-    }
-
-    const existing = await packageRepository.findActive();
-
-    if (existing) {
-      throw new AppError(409, "Another package is already active.");
-    }
-
     const [activatedPackage] = await packageRepository.activatePackage(
       id,
       event.id

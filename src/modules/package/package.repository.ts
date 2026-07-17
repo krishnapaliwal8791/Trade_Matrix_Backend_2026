@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import { Event, Package, PackageStatus } from "@prisma/client";
+import { AppError } from "../../errors/AppError";
 
 export const packageRepository = {
   async findAll(): Promise<Package[]> {
@@ -22,18 +23,40 @@ export const packageRepository = {
     packageId: string,
     eventId: string
   ): Promise<[Package, Event]> {
-    const [updatedPackage, updatedEvent] = await prisma.$transaction([
-      prisma.package.update({
-        where: { id: packageId },
+    return prisma.$transaction(async (tx) => {
+      // 1. Check Package is NOT_REVEALED (CAS) - Evaluated first to match legacy priority
+      const packageUpdate = await tx.package.updateMany({
+        where: { id: packageId, status: PackageStatus.NOT_REVEALED },
         data: { status: PackageStatus.ACTIVE },
-      }),
-      prisma.event.update({
-        where: { id: eventId },
-        data: { activePackageId: packageId },
-      }),
-    ]);
+      });
 
-    return [updatedPackage, updatedEvent];
+      if (packageUpdate.count === 0) {
+        throw new AppError(
+          409,
+          "Package cannot be activated from its current status."
+        );
+      }
+
+      // 2. Check Event has no active package (CAS) - Evaluated second
+      const eventUpdate = await tx.event.updateMany({
+        where: { id: eventId, activePackageId: null },
+        data: { activePackageId: packageId },
+      });
+
+      if (eventUpdate.count === 0) {
+        throw new AppError(409, "Another package is already active.");
+      }
+
+      // 3. Return updated entities
+      const updatedPackage = await tx.package.findUnique({
+        where: { id: packageId },
+      });
+      const updatedEvent = await tx.event.findUnique({
+        where: { id: eventId },
+      });
+
+      return [updatedPackage!, updatedEvent!];
+    });
   },
 
   async deactivatePackage(
