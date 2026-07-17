@@ -3,8 +3,11 @@ import { logger } from "./config/logger";
 import { app } from "./app";
 import { prisma } from "./lib/prisma";
 import http from "http";
+import { initSocket } from "./socket";
 
 const server = http.createServer(app);
+
+initSocket(server);
 
 server.listen(env.PORT, () => {
   logger.info(

@@ -2,6 +2,7 @@ import { Package, EventStatus, PackageStatus } from "@prisma/client";
 import { AppError } from "../../errors/AppError";
 import { packageRepository } from "./package.repository";
 import { eventRepository } from "../event/event.repository";
+import { dispatcher } from "../../socket";
 
 async function requireRunningEvent(): Promise<{ id: string }> {
   const event = await eventRepository.getEvent();
@@ -69,6 +70,8 @@ export const packageEngine = {
       event.id
     );
 
+    dispatcher.packageActivated();
+
     return activatedPackage;
   },
 
@@ -90,6 +93,8 @@ export const packageEngine = {
       id,
       event.id
     );
+
+    dispatcher.packageUnsold();
 
     return updatedPackage;
   },

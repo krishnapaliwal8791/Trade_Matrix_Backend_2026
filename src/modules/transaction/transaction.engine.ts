@@ -4,6 +4,7 @@ import { eventRepository } from "../event/event.repository";
 import { packageRepository } from "../package/package.repository";
 import { transactionRepository } from "./transaction.repository";
 import { TransactionInput } from "./transaction.validation";
+import { dispatcher } from "../../socket";
 
 export const transactionEngine = {
   async recordSale(
@@ -69,12 +70,16 @@ export const transactionEngine = {
       throw new AppError(409, "Team does not have sufficient remaining cash.");
     }
 
-    return transactionRepository.recordSale({
+    const transaction = await transactionRepository.recordSale({
       packageId,
       teamId,
       organizerId,
       winningBid,
       eventId: event.id,
     });
+
+    dispatcher.packageSold();
+
+    return transaction;
   },
 };

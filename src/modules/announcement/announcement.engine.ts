@@ -4,6 +4,7 @@ import {
   AnnouncementWithAuthor,
 } from "./announcement.repository";
 import { AnnouncementInput } from "./announcement.validation";
+import { dispatcher } from "../../socket";
 
 export const announcementEngine = {
   async getAll(): Promise<AnnouncementWithAuthor[]> {
@@ -14,9 +15,11 @@ export const announcementEngine = {
     input: AnnouncementInput,
     authorId: string
   ): Promise<Announcement> {
-    return announcementRepository.create({
+    const announcement = await announcementRepository.create({
       message: input.message,
       authorId,
     });
+    dispatcher.announcementCreated();
+    return announcement;
   },
 };
