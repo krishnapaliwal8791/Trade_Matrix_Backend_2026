@@ -11,6 +11,29 @@ export const packageRepository = {
     return prisma.package.findUnique({ where: { id } });
   },
 
+  async findByIdWithCompanies(id: string) {
+    return prisma.package.findUnique({
+      where: { id },
+      include: {
+        packageCompanies: {
+          select: {
+            shares: true,
+            company: {
+              select: {
+                id: true,
+                name: true,
+                sector: true,
+                description: true,
+                logo: true,
+                initialPrice: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  },
+
   async findActive(): Promise<Package | null> {
     return prisma.package.findFirst({
       where: { status: PackageStatus.ACTIVE },

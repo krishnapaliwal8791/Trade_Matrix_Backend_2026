@@ -192,6 +192,9 @@ The backend utilizes **Clerk** for authentication.
   - `createdAt` (string): ISO 8601 creation timestamp.
   - `updatedAt` (string): ISO 8601 update timestamp.
 
+> **Note:** `GET /packages/` returns lightweight package summaries — scalar fields only, with no company data. To retrieve the full company composition of a specific package, use `GET /packages/:id`.
+
+
 **GET `/packages/active`**
 - **Purpose:** Fetch the details of the currently active package up for auction.
 - **Authentication:** Required.
@@ -213,12 +216,67 @@ The backend utilizes **Clerk** for authentication.
 - **Possible Errors:** `404 Not Found` if no package is currently active.
 
 **GET `/packages/:id`**
-- **Purpose:** Fetch a specific package by ID.
+- **Purpose:** Fetch the complete details of a specific package, including all companies it contains.
 - **Authentication:** Required.
 - **Allowed Roles:** `ALL`
 - **Path Parameters:** `id` (string)
-- **Response:** (Same JSON structure as `/packages/active`)
-- **Possible Errors:** `404 Not Found` if package does not exist.
+- **Response:**
+  ```json
+  {
+    "id": "cuid_pkg",
+    "name": "Package Alpha",
+    "description": "Tech starter pack",
+    "basePrice": 1000,
+    "status": "NOT_REVEALED",
+    "winningBid": null,
+    "ownerTeamId": null,
+    "createdAt": "2026-07-17T09:00:00.000Z",
+    "updatedAt": "2026-07-17T09:00:00.000Z",
+    "companies": [
+      {
+        "id": "cuid_co_1",
+        "name": "Tech Corp",
+        "sector": "Technology",
+        "description": "A leading technology company.",
+        "logo": "https://example.com/logos/techcorp.png",
+        "initialPrice": 500,
+        "shares": 200
+      },
+      {
+        "id": "cuid_co_2",
+        "name": "Bank Inc",
+        "sector": "Finance",
+        "description": "A major financial institution.",
+        "logo": null,
+        "initialPrice": 300,
+        "shares": 150
+      }
+    ]
+  }
+  ```
+  All standard package scalar fields are returned unchanged:
+  - `id` (string): Package ID.
+  - `name` (string): Package name.
+  - `description` (string | null): Description text.
+  - `basePrice` (number): Minimum bid allowed.
+  - `status` (string): `NOT_REVEALED`, `ACTIVE`, `SOLD`, or `UNSOLD`.
+  - `winningBid` (number | null): The final sale price, populated only if SOLD.
+  - `ownerTeamId` (string | null): The winning team ID, populated only if SOLD.
+  - `createdAt` (string): ISO 8601 creation timestamp.
+  - `updatedAt` (string): ISO 8601 update timestamp.
+
+  Additionally, a `companies` array is appended. Each object in the array contains:
+  - `id` (string): Company ID.
+  - `name` (string): Company name.
+  - `sector` (string): Industry sector the company belongs to.
+  - `description` (string): Company description text.
+  - `logo` (string | null): URL of the company logo, or null if not set.
+  - `initialPrice` (number): The company's initial share price.
+  - `shares` (number): Number of shares of this company included in the package (sourced from the join table).
+
+> **Note:** The `companies` array is embedded directly in this response. The frontend does **not** need to make any additional API request to retrieve the companies belonging to a package.
+- **Possible Errors:** `404 Not Found` if the package does not exist.
+
 
 **POST `/packages/:id/activate`**
 - **Purpose:** Set a package as the active auction item.

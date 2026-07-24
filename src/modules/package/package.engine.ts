@@ -1,4 +1,5 @@
 import { Package, EventStatus, PackageStatus } from "@prisma/client";
+import { PackageDetail } from "./package.types";
 import { AppError } from "../../errors/AppError";
 import { packageRepository } from "./package.repository";
 import { eventRepository } from "../event/event.repository";
@@ -23,14 +24,27 @@ export const packageEngine = {
     return packageRepository.findAll();
   },
 
-  async getPackageById(id: string): Promise<Package> {
-    const pkg = await packageRepository.findById(id);
+  async getPackageById(id: string): Promise<PackageDetail> {
+    const pkg = await packageRepository.findByIdWithCompanies(id);
 
     if (!pkg) {
       throw new AppError(404, "Package not found.");
     }
 
-    return pkg;
+    const { packageCompanies, ...packageFields } = pkg;
+
+    return {
+      ...packageFields,
+      companies: packageCompanies.map(({ shares, company }) => ({
+        id: company.id,
+        name: company.name,
+        sector: company.sector,
+        description: company.description,
+        logo: company.logo,
+        initialPrice: company.initialPrice,
+        shares,
+      })),
+    };
   },
 
   async getActivePackage(): Promise<Package> {

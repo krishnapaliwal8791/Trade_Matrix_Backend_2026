@@ -393,9 +393,17 @@ Enforced primarily by the `packageEngine` and `transactionEngine`.
 - **Possible AppErrors:** 404 Not Found (no active package).
 
 - **Method / Route:** `GET /packages/:id`
-- **Purpose:** Fetch a specific package.
+- **Purpose:** Fetch a specific package with its full company composition.
 - **Auth / Roles:** Required / `ALL`
-- **Response:** `Package`
+- **Response:** `PackageDetail` — all scalar `Package` fields plus a `companies` array. Each element of `companies` is a `PackageCompanyDetail` object:
+  - `id` (string): Company ID.
+  - `name` (string): Company name.
+  - `sector` (string): Industry sector.
+  - `description` (string): Company description.
+  - `logo` (string | null): URL of the company logo, or null if not set.
+  - `initialPrice` (number): The company's initial share price.
+  - `shares` (number): Number of shares of this company included in the package (sourced from the `PackageCompany` join table).
+- **Possible AppErrors:** 404 Not Found (package does not exist).
 
 - **Method / Route:** `POST /packages/:id/activate`
 - **Purpose:** Set a package as active on the event.
